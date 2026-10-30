@@ -21,8 +21,7 @@ Each figure folder contains the plot script of that figure and the processed dat
 ## Requirements
 
 - MATLAB with the Statistics and Machine Learning Toolbox
-- `ndass_confid_niceplot.m` and `ndass_smooth.m` (in `functions/`), used by `fig4_visualization.m`, `figS13_plot.m` and `figS14_plot.m`
-
+- Functions (in `functions/`
 ## How to run
 
 1. Add the repository, including all subfolders, to the MATLAB path:
