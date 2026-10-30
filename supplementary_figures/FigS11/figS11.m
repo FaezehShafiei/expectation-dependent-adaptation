@@ -1,0 +1,116 @@
+% ======================================================================
+% Code for:
+%   "Prefrontal feedback is associated with expectation-dependent
+%    adaptation in inferotemporal cortex"
+%   Shafiei et al. Communications Biology (under revision).
+%
+% This script is part of the analysis code for the paper above. We
+% recorded single units and field potentials from macaque IT and vlPFC
+% while monkeys viewed pairs of images in blocks with different
+% repetition probabilities.
+%
+% Fig. S11: Fig. 3 for each monkey separately (monkey F and
+% monkey V) in IT: two figure windows with the layout of Fig. 3.
+%
+%   A  Population PSTHs of the four conditions
+%   B  AI per condition, stimulus-specific adaptation (SSA) per block and
+%      block effect (BE), full window (0-200 ms after response onset)
+%   C  The same for the early window (0-100 ms)
+%   D  The same for the late window (100-200 ms)
+%
+% Points and bars show the mean across neurons; error bars are the SEM.
+% Response windows start at the response onset of each neuron.
+%
+% Input:  figS11_data.mat (cell R: one element per monkey)
+% Output: two figure windows
+
+clc; clear; close all;
+load('figS12_data.mat', 'R');
+
+% Monkey 1 = F and monkey 2 = V is assumed here; check that the monkey ids
+% in the data match.
+animal = {'Monkey F', 'Monkey V'};
+for m = 1:numel(R)
+    draw_fig3(R{m}, sprintf('IT, %s', animal{m}));
+end
+
+%% ======================================================================
+% Local functions
+
+function draw_fig3(r, ttl)
+PSTH_pop = r.PSTH_pop;  n_neurons = r.n_neurons;
+AIs_full = r.AIs_full;  AIs_early = r.AIs_early;  AIs_late = r.AIs_late;
+SSA_RB_full = r.SSA_RB_full;  SSA_AB_full = r.SSA_AB_full;  BE_full = r.BE_full;  p_BE_full = r.p_BE_full;  p_SSA_full = r.p_SSA_full;
+SSA_RB_early = r.SSA_RB_early;  SSA_AB_early = r.SSA_AB_early;  BE_early = r.BE_early;  p_BE_early = r.p_BE_early;  p_SSA_early = r.p_SSA_early;
+SSA_RB_late = r.SSA_RB_late;  SSA_AB_late = r.SSA_AB_late;  BE_late = r.BE_late;  p_BE_late = r.p_BE_late;  p_SSA_late = r.p_SSA_late;
+
+%% Colours and labels
+col.RB_rep = [0.80 0.10 0.10];
+col.RB_alt = [0.95 0.55 0.15];
+col.AB_rep = [0.10 0.35 0.95];
+col.AB_alt = [0.40 0.70 1.00];
+colors = [col.RB_rep; col.RB_alt; col.AB_rep; col.AB_alt];
+AI_labels = {'RB-Rep', 'RB-Alt', 'AB-Rep', 'AB-Alt'};
+S1_ON = 250;                                 % S1 onset (ms from trial start)
+
+figure('Color', 'w', 'Position', [50 50 1300 1400]);
+sgtitle(ttl, 'FontWeight', 'normal');
+
+%% Panel A: population PSTHs (top row, all three columns)
+axBig = subplot(4, 3, [1 2 3]);  hold on;
+mRB_rep = PSTH_pop.RB_rep;  mRB_alt = PSTH_pop.RB_alt;
+mAB_rep = PSTH_pop.AB_rep;  mAB_alt = PSTH_pop.AB_alt;
+t_ms = (0:numel(mRB_rep) - 1) - S1_ON;
+plot(t_ms, mRB_rep, 'Color', col.RB_rep, 'LineWidth', 2);
+plot(t_ms, mRB_alt, 'Color', col.RB_alt, 'LineWidth', 2);
+plot(t_ms, mAB_rep, 'Color', col.AB_rep, 'LineWidth', 2);
+plot(t_ms, mAB_alt, 'Color', col.AB_alt, 'LineWidth', 2);
+xline(0, ':k');  xline(100, ':k');  xline(400, ':k');  xline(500, ':k');
+xlabel('Time from S1 onset (ms)');  ylabel('Firing rate (Hz)');
+title(sprintf('A. Population PSTHs (n = %d)', n_neurons));
+legend({'RB-Rep', 'RB-Alt', 'AB-Rep', 'AB-Alt'}, 'Location', 'northeast');  legend boxoff;
+xlim([-100 800]);  box off;  set(gca, 'TickDir', 'out', 'FontSize', 11);
+
+%% Panels B, C, D: AI, SSA and block effect for the three windows
+window_data = { ...
+    struct('AIs', AIs_full,  'SSA_RB', SSA_RB_full,  'SSA_AB', SSA_AB_full,  'BE', BE_full,  'p_SSA', p_SSA_full,  'p_BE', p_BE_full,  'label', 'B. Full window (0-200 ms)'), ...
+    struct('AIs', AIs_early, 'SSA_RB', SSA_RB_early, 'SSA_AB', SSA_AB_early, 'BE', BE_early, 'p_SSA', p_SSA_early, 'p_BE', p_BE_early, 'label', 'C. Early window (0-100 ms)'), ...
+    struct('AIs', AIs_late,  'SSA_RB', SSA_RB_late,  'SSA_AB', SSA_AB_late,  'BE', BE_late,  'p_SSA', p_SSA_late,  'p_BE', p_BE_late,  'label', 'D. Late window (100-200 ms)') ...
+};
+
+for row = 1:3
+    d = window_data{row};
+    base = 3 + (row - 1) * 3;                % subplot index before this row's panels
+
+    % AI per condition
+    subplot(4, 3, base + 1);  hold on;
+    means = nanmean(d.AIs, 1);
+    sems  = nanstd(d.AIs, [], 1) ./ sqrt(sum(~isnan(d.AIs), 1));
+    errorbar(1:4, means, sems, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+    for i = 1:4
+        plot(i, means(i), 'o', 'MarkerFaceColor', colors(i, :), 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
+    end
+    xlim([0.5 4.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', 1:4, 'XTickLabel', AI_labels);
+    ylabel('AI');  yline(0, 'k:');
+    title(d.label);  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+
+    % Stimulus-specific adaptation in each block
+    subplot(4, 3, base + 2);  hold on;
+    meanSSA = [nanmean(d.SSA_RB), nanmean(d.SSA_AB)];
+    semSSA  = [nanstd(d.SSA_RB) / sqrt(sum(~isnan(d.SSA_RB))), nanstd(d.SSA_AB) / sqrt(sum(~isnan(d.SSA_AB)))];
+    errorbar([1 2], meanSSA, semSSA, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+    plot([1 2], meanSSA, 'o', 'MarkerFaceColor', [0.3 0.6 0.9], 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
+    xlim([0.5 2.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', [1 2], 'XTickLabel', {'RB', 'AB'});
+    ylabel('SSA');  yline(0, 'k:');
+    title(sprintf('SSA (p=%.3g)', d.p_SSA));  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+
+    % Block effect
+    subplot(4, 3, base + 3);  hold on;
+    meanBE = nanmean(d.BE);  semBE = nanstd(d.BE) / sqrt(sum(~isnan(d.BE)));
+    errorbar(1, meanBE, semBE, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+    plot(1, meanBE, 'o', 'MarkerFaceColor', [0.3 0.6 0.9], 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
+    xlim([0.5 1.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', 1, 'XTickLabel', {'RB - AB'});
+    ylabel('Block effect');  yline(0, 'k:');
+    title(sprintf('BE (p=%.3g)', d.p_BE));  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+end
+end
