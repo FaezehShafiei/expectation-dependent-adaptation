@@ -25,8 +25,10 @@
 % Bars show the partial Spearman correlation of the RSM with the block
 % model (category partialled out) and with the category model (block
 % partialled out). Error bars are the SD of the hierarchical bootstrap
-% (sessions within monkey, then neurons within session). Stars mark the
-% permutation p-value; the permutations keep the factorial design.
+% (sessions within monkey, then neurons within session); the dots are the
+% individual bootstrap draws. Stars above the bars mark the permutation
+% p-value (the permutations keep the factorial design); the bracket marks the
+% two-sided bootstrap p of the difference between the two correlations.
 %
 % Input:  fig2_data.mat (variables F and areas)
 % Output: the figure window
@@ -65,13 +67,23 @@ for a = 1:numel(areas)
 
     % Partial correlations with the two models
     axes('Position', [0.45, base + 0.08, 0.12, 0.34]);  hold on;
+    top = 0;
     for s = 1:2
         bar(s, r.obs(s), 0.6, 'FaceColor', [0.55 0.55 0.55], 'EdgeColor', 'none');
+        % dots: the individual hierarchical-bootstrap draws (jittered horizontally)
+        bd = r.boot(isfinite(r.boot(:, s)), s);
+        jit = (rand(numel(bd), 1) - 0.5) * 0.4;
+        scatter(s + jit, bd, 6, 'k', 'filled', 'MarkerFaceAlpha', 0.15, 'MarkerEdgeColor', 'none');
         errorbar(s, r.obs(s), r.sd(s), 'k', 'LineStyle', 'none', 'CapSize', 6, 'LineWidth', 1.5);
-        text(s, r.obs(s) + r.sd(s) + 0.03, stars_of(r.p(s)), 'HorizontalAlignment', 'center', 'FontSize', 13);
+        text(s, max(bd) + 0.03, stars_of(r.p(s)), 'HorizontalAlignment', 'center', 'FontSize', 13);
+        top = max(top, max(bd));
     end
+    % context vs category: two-sided bootstrap p of the difference between the two partial correlations
+    yb = top + 0.10;
+    plot([1 1 2 2], [yb - 0.02, yb, yb, yb - 0.02], 'k', 'LineWidth', 1);
+    text(1.5, yb + 0.01, stars_of(r.p_diff), 'HorizontalAlignment', 'center', 'FontSize', 13);
     set(gca, 'XTick', 1:2, 'XTickLabel', {'Block', 'Category'}, 'YTick', 0:0.2:1);
-    xlim([0.4 2.6]);  ylim([0 1.1]);
+    xlim([0.4 2.6]);  ylim([0 max(1.1, yb + 0.12)]);
     ylabel('Partial Spearman correlation');
     box off;  set(gca, 'TickDir', 'out', 'FontSize', 11);
 

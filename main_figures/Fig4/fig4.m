@@ -14,9 +14,6 @@
 %% fig4_visualization.m
 % Figure 4: expectation-dependent repetition effects in IT single units
 % and field potentials.
-% This script only draws the figure. The numbers come from fig4_data.mat,
-% which fig4_analysis.m creates. It also needs ndass_confid_niceplot.m and
-% ndass_smooth.m on the MATLAB path.
 %
 %   A  Single units: Cohen's d among expected vs unexpected trials, one dot
 %      per neuron, with the regression line and the correlation

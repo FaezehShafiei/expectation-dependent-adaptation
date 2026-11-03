@@ -12,8 +12,7 @@
 % ======================================================================
 
 % Figure 3: repetition suppression and the block effect in IT.
-% This script only draws the figure. The numbers come from fig3_data.mat,
-% which fig3_analysis.m creates.
+
 %
 %   A  Population PSTHs of the four conditions, with an inset showing the
 %      adaptation index (AI) for repeated (RT) and alternated (AT) trials,
@@ -22,6 +21,7 @@
 %      block effect (BE), full window (0-200 ms after response onset)
 %   C  The same for the early window (0-100 ms)
 %   D  The same for the late window (100-200 ms)
+%   In B-D each panel has a narrow panel beside it with the single-neuron values (dots) on their own y-axis
 %
 % Points and bars show the mean across neurons; error bars are the SEM.
 % Response windows start at the response onset.
@@ -67,12 +67,19 @@ ins_colors = [0.80 0.10 0.10; 0.10 0.35 0.95];
 AI_ins_means = [nanmean(AI_repeated), nanmean(AI_alternated)];
 AI_ins_sems  = [nanstd(AI_repeated) / sqrt(numel(AI_repeated)), nanstd(AI_alternated) / sqrt(numel(AI_alternated))];
 bar(1:2, AI_ins_means, 'FaceColor', 'flat', 'CData', ins_colors);
-errorbar(1:2, AI_ins_means, AI_ins_sems, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+% single-neuron AI values as dots (jittered horizontally)
+AI_dots = {AI_repeated(isfinite(AI_repeated)), AI_alternated(isfinite(AI_alternated))};
+for k = 1:2
+    graded_dots(axInset, k, AI_dots{k}, mean(AI_dots{k}));
+end
+errorbar(1:2, AI_ins_means, AI_ins_sems, 'k', 'LineStyle', 'none', 'LineWidth', 1.5);
+% fixed y-range (neurons outside it are not shown)
+ylim(axInset, [-0.1 0.1]);
 if p_repeated < 0.01
-    text(1, AI_ins_means(1) + AI_ins_sems(1) + 0.01, '***', 'FontSize', 12, 'HorizontalAlignment', 'center');
+    text(1, 0.085, '***', 'FontSize', 12, 'HorizontalAlignment', 'center');
 end
 if p_alternated < 0.01
-    text(2, AI_ins_means(2) + AI_ins_sems(2) + 0.01, '***', 'FontSize', 12, 'HorizontalAlignment', 'center');
+    text(2, 0.085, '***', 'FontSize', 12, 'HorizontalAlignment', 'center');
 end
 set(axInset, 'XTick', 1:2, 'XTickLabel', {'RT', 'AT'}, 'FontSize', 7);
 ylabel(axInset, 'AI', 'FontSize', 7);
@@ -91,33 +98,78 @@ for row = 1:3
     base = 3 + (row - 1) * 3;                % subplot index before this row's panels
 
     % AI per condition
-    subplot(4, 3, base + 1);  hold on;
+    ax = subplot(4, 3, base + 1);  hold on;
     means = nanmean(d.AIs, 1);
     sems  = nanstd(d.AIs, [], 1) ./ sqrt(sum(~isnan(d.AIs), 1));
     errorbar(1:4, means, sems, 'k', 'LineStyle', 'none', 'LineWidth', 1);
     for i = 1:4
         plot(i, means(i), 'o', 'MarkerFaceColor', colors(i, :), 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
     end
-    xlim([0.5 4.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', 1:4, 'XTickLabel', AI_labels);
-    ylabel('AI');  yline(0, 'k:');
-    title(d.label);  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    xlim([0.5 4.5]);  ylim([-0.05 0.1]);  set(gca, 'XTick', 1:4, 'XTickLabel', AI_labels);
+    ylabel('AI');  yline(0, 'k:');  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    dot_inset(ax, {d.AIs(:, 1), d.AIs(:, 2), d.AIs(:, 3), d.AIs(:, 4)}, means, [0.5 4.5], d.label, AI_labels);
 
     % Stimulus-specific adaptation in each block
-    subplot(4, 3, base + 2);  hold on;
+    ax = subplot(4, 3, base + 2);  hold on;
     meanSSA = [nanmean(d.SSA_RB), nanmean(d.SSA_AB)];
     semSSA  = [nanstd(d.SSA_RB) / sqrt(sum(~isnan(d.SSA_RB))), nanstd(d.SSA_AB) / sqrt(sum(~isnan(d.SSA_AB)))];
     errorbar([1 2], meanSSA, semSSA, 'k', 'LineStyle', 'none', 'LineWidth', 1);
     plot([1 2], meanSSA, 'o', 'MarkerFaceColor', [0.3 0.6 0.9], 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
-    xlim([0.5 2.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', [1 2], 'XTickLabel', {'RB', 'AB'});
-    ylabel('SSA');  yline(0, 'k:');
-    title(sprintf('SSA (p=%.3g)', d.p_SSA));  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    xlim([0.5 2.5]);  ylim([-0.05 0.1]);  set(gca, 'XTick', [1 2], 'XTickLabel', {'RB', 'AB'});
+    ylabel('SSA');  yline(0, 'k:');  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    dot_inset(ax, {d.SSA_RB, d.SSA_AB}, meanSSA, [0.5 2.5], sprintf('SSA (p=%.3g)', d.p_SSA), {'RB', 'AB'});
 
     % Block effect
-    subplot(4, 3, base + 3);  hold on;
+    ax = subplot(4, 3, base + 3);  hold on;
     meanBE = nanmean(d.BE);  semBE = nanstd(d.BE) / sqrt(sum(~isnan(d.BE)));
     errorbar(1, meanBE, semBE, 'k', 'LineStyle', 'none', 'LineWidth', 1);
     plot(1, meanBE, 'o', 'MarkerFaceColor', [0.3 0.6 0.9], 'MarkerEdgeColor', 'k', 'MarkerSize', 6);
-    xlim([0.5 1.5]);  ylim([-0.15 0.15]);  set(gca, 'XTick', 1, 'XTickLabel', {'RB - AB'});
-    ylabel('Block effect');  yline(0, 'k:');
-    title(sprintf('BE (p=%.3g)', d.p_BE));  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    xlim([0.5 1.5]);  ylim([-0.05 0.1]);  set(gca, 'XTick', 1, 'XTickLabel', {'RB - AB'});
+    ylabel('Block effect');  yline(0, 'k:');  box off;  set(gca, 'TickDir', 'out', 'FontSize', 9);
+    dot_inset(ax, {d.BE}, meanBE, [0.5 1.5], sprintf('BE (p=%.3g)', d.p_BE), {'RB-AB'});
+end
+
+%% ======================================================================
+% Local functions
+
+function graded_dots(ax, x0, v, mu)
+% Single-neuron values as tiny opaque dots at position x0 (jittered horizontally). Dots do not blend
+% (no transparency). The grey level depends on the rank of each neuron's distance from the mean mu divided by the
+% number of neurons (t: 0 = closest, 1 = farthest), on a logarithmic scale: g = log10(1 + 9 t) runs from 0 (black)
+% to 1 (white); it rises quickly near the mean and flattens towards the far neurons. The dot size follows the same
+% grading (larger close to the mean, smaller far from it).
+v = v(isfinite(v));
+n = numel(v);
+[~, ord] = sort(abs(v - mu), 'ascend');                % closest first
+v = v(ord);
+t = (0:n - 1)' / max(n - 1, 1);                        % rank / number, 0 ... 1
+g = log10(1 + 9 * t);                                  % logarithmic grading, black -> white
+v = flipud(v);  g = flipud(g);                         % draw far (light) dots first, near (dark) dots on top
+jit = (rand(n, 1) - 0.5) * 0.6;
+sz = 1 + 4 * (1 - g);                                  % dot size graded the same way: 5 (closest) ... 1 (farthest)
+scatter(ax, x0 + jit, v, sz, [g g g], 'filled', 'MarkerEdgeColor', 'none');
+end
+
+function dot_inset(ax, vals, means, xl, ttl, xt)
+% The main axes keep the left part of their cell; a narrow panel beside them (to the right) shows every neuron as a
+% tiny opaque dot on its own y-axis (-0.2 to 0.2), with the mean marked by a short red bar.
+% vals: cell of column vectors (one per x position 1..numel(vals)); means: their means.
+p = get(ax, 'Position');
+set(ax, 'Position', [p(1), p(2), p(3) * 0.58, p(4)]);
+title(ax, ttl, 'FontSize', 9);
+unit = 0.075 * p(3);                                   % width of one column: the same in every side panel
+axI = axes('Position', [p(1) + p(3) * 0.66, p(2), numel(vals) * unit, p(4)]);   % 4, 2 or 1 columns wide
+hold(axI, 'on');
+allv = [];
+for k = 1:numel(vals)
+    v = vals{k};  allv = [allv; v(isfinite(v))];
+end
+for k = 1:numel(vals)
+    graded_dots(axI, k, vals{k}, means(k));
+    plot(axI, k + [-0.3 0.3], [means(k) means(k)], 'r', 'LineWidth', 1.5);
+end
+xlim(axI, xl);  ylim(axI, [-0.2 0.2]);                    % fixed range; neurons outside it are not shown
+yline(axI, 0, 'k:');
+set(axI, 'XTick', 1:numel(vals), 'XTickLabel', xt, 'XTickLabelRotation', 45, 'FontSize', 6, 'TickDir', 'out', 'Box', 'off');
+title(axI, 'Single neurons', 'FontSize', 8);
 end
