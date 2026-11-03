@@ -1,4 +1,4 @@
-# Prefrontal feedback is associated with expectation-dependent adaptation in inferotemporal cortex
+# Prefrontal signal is associated with expectation-dependent adaptation in inferotemporal cortex
 
 Code and data for the figures of
 
