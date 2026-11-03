@@ -2,7 +2,7 @@
 
 Code and data for the figures of
 
-> Shafiei et al. *Prefrontal feedback is associated with expectation-dependent adaptation in inferotemporal cortex.* Communications Biology (under revision).
+> Shafiei et al. *Prefrontal signal is associated with expectation-dependent adaptation in inferotemporal cortex.* Communications Biology (under revision).
 
 We recorded single units and field potentials from macaque inferotemporal cortex (IT) and ventrolateral prefrontal cortex (vlPFC) while two monkeys (F and V) viewed pairs of images in blocks with different repetition probabilities (repeating, alternating and neutral blocks).
 
